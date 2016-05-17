@@ -23,6 +23,7 @@ public class EarthquakeFeedFetcher
   public static void main( String[] args )
   {
     final String EARTHQUAKE_FEED_URL = "http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson";
+    final Point harold = new Point(-122.582999, 45.482845);
     ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     ClientConfig configuration = new ClientConfig();
@@ -36,7 +37,7 @@ public class EarthquakeFeedFetcher
     if (status == 200) {
 
       String feedString = response.readEntity(String.class); 
-
+      
       try {
         FeatureCollection fc = mapper.readValue(feedString, FeatureCollection.class);
         for (Feature feature : fc.getFeatures()) {
@@ -45,6 +46,11 @@ public class EarthquakeFeedFetcher
           if (g instanceof Point) {
             Point p = (Point)g;
             System.out.println("At " + p.getCoordinates().getLatitude() + ", " + p.getCoordinates().getLongitude());
+            
+            Haversine h = new Haversine();
+            double distance = h.distance(harold, p);
+            System.out.println("Earthquake was " + distance + " km from home location");
+            
           }
           /* Properties: 
            * feature.getProperty("place") is a string description of where the earthquake happened
