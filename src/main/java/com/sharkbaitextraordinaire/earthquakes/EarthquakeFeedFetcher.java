@@ -1,6 +1,8 @@
 package com.sharkbaitextraordinaire.earthquakes;
 
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
@@ -38,6 +40,9 @@ public class EarthquakeFeedFetcher
 
       String feedString = response.readEntity(String.class); 
       
+      DecimalFormat df = new DecimalFormat("#.####");
+      df.setRoundingMode(RoundingMode.HALF_UP);
+      
       try {
         FeatureCollection fc = mapper.readValue(feedString, FeatureCollection.class);
         for (Feature feature : fc.getFeatures()) {
@@ -49,7 +54,7 @@ public class EarthquakeFeedFetcher
             
             Haversine h = new Haversine();
             double distance = h.distance(harold, p);
-            System.out.println("Earthquake was " + distance + " km from home location");
+            System.out.println("Earthquake was " + df.format(distance) + " km from home location");
             
           }
           /* Properties: 
