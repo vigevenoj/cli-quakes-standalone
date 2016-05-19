@@ -1,8 +1,13 @@
 package com.sharkbaitextraordinaire.earthquakes;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.Properties;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
@@ -22,10 +27,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class EarthquakeFeedFetcher 
 {
-  public static void main( String[] args )
-  {
+  private static final Point harold = new Point(-122.582999, 45.482845);
+  private static Point location;
+  private static Properties configProperties = new Properties();
+
+  public static synchronized Point getLocation() {
+    return location;
+  }
+
+  public static synchronized void setLocation(Point location) {
+    location = location;
+  }
+
+  public static void main( String[] args ) {
+    // set up initial location
+    setLocation(harold);
+    loadProperties(args[0]);
+
+    EarthquakeMqttClient mqttClient = new EarthquakeMqttClient(configProperties);
+    mqttClient.run();
+
     final String EARTHQUAKE_FEED_URL = "http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson";
-    final Point harold = new Point(-122.582999, 45.482845);
     ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     ClientConfig configuration = new ClientConfig();
@@ -80,6 +102,29 @@ public class EarthquakeFeedFetcher
       }
     } else {
       System.out.println("Got " + status + " response instead of 200");
+    }
+  }
+
+  private static void loadDefaultProperties() {
+    String DEFAULT_PROPERTIES_FILE_NAME = "com/sharkbaitextraordinaire/earthquakes/default.properties";
+    InputStream in = EarthquakeMqttClient.class.getClassLoader().getResourceAsStream(DEFAULT_PROPERTIES_FILE_NAME);
+    try {
+      configProperties.load(in);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private static void loadProperties(String path) {
+    System.out.println("Using " + path + " as path");
+    try {
+      FileInputStream fis = new FileInputStream(new File(path));
+      configProperties.load(fis);
+    } catch (FileNotFoundException e) {
+      System.err.println("Failed to load specified properties, loading default.properties");
+      loadDefaultProperties();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 }

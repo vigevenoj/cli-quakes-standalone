@@ -10,6 +10,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 
+import org.geojson.*;
+
 public class EarthquakeMqttClient implements MqttCallback, Runnable {
 	
 	private Properties properties;
@@ -30,8 +32,14 @@ public class EarthquakeMqttClient implements MqttCallback, Runnable {
 		
 	}
 
-	public void messageArrived(String arg0, MqttMessage arg1) throws Exception {
-		// TODO Auto-generated method stub
+	public void messageArrived(String topicString, MqttMessage message) throws Exception {
+    try {
+      String payload = new  String(message.getPayload());
+      System.out.println(payload);
+      EarthquakeFeedFetcher.setLocation(new Point(-122.582999, 45.482845));
+    } catch(Exception e) {
+      // TODO log this?
+    }
 		
 	}
 
@@ -42,7 +50,7 @@ public class EarthquakeMqttClient implements MqttCallback, Runnable {
 		connectionOptions = new MqttConnectOptions();
 		connectionOptions.setKeepAliveInterval(30);
 		connectionOptions.setUserName(properties.getProperty("app.client.username"));
-		connectionOptions.setPassword(properties.getProperty("app.client.password").toCharArray());
+    connectionOptions.setPassword(properties.getProperty("app.client.password").toCharArray());
 		
 		Properties sslProperties = new Properties();
 		sslProperties.setProperty("com.ibm.ssl.protocol", properties.getProperty("com.ibm.ssl.protocol"));
@@ -56,23 +64,25 @@ public class EarthquakeMqttClient implements MqttCallback, Runnable {
 			client.setCallback(this);
 			client.connect(connectionOptions);
 		} catch (MqttException e) {
+      System.out.println("NOT CONNECTED");
 			e.printStackTrace();
 		}
 		
-		System.out.println("Connected to " + brokerUrl);
-		
-		String myTopic = properties.getProperty("app.broker.topic");
-		MqttTopic topic = client.getTopic(myTopic);
-		
-		if (true) {
-			try {
-				int subQoS = 0;
-				client.subscribe(myTopic, subQoS);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
+    if (client.isConnected()) {
+      System.out.println("Connected to " + brokerUrl);
+
+      String myTopic = properties.getProperty("app.broker.topic");
+      MqttTopic topic = client.getTopic(myTopic);
+
+      if (true) {
+        try {
+          int subQoS = 0;
+          client.subscribe(myTopic, subQoS);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    }
 	}
 
 }
