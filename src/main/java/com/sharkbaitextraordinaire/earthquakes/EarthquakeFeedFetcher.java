@@ -103,6 +103,8 @@ public class EarthquakeFeedFetcher
     } else {
       System.out.println("Got " + status + " response instead of 200");
     }
+    
+    System.exit(0);
   }
 
   private static void loadDefaultProperties() {
