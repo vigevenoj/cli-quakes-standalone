@@ -30,6 +30,8 @@ public class EarthquakeFeedFetcher
   private static final Point harold = new Point(-122.582999, 45.482845);
   private static Point location;
   private static Properties configProperties = new Properties();
+  private static final double WORRY_THRESHOLD_DISTANCE = 1500; // pay attention to earthquakes that are closer than this
+  private static final double WORRY_THRESHOLD_MAGNITUDE = 4.0; // ? I dunno
 
   public static synchronized Point getLocation() {
     return location;
@@ -72,11 +74,14 @@ public class EarthquakeFeedFetcher
           GeoJsonObject g = feature.getGeometry();
           if (g instanceof Point) {
             Point p = (Point)g;
-            System.out.println("At " + p.getCoordinates().getLatitude() + ", " + p.getCoordinates().getLongitude());
-            
             Haversine h = new Haversine();
             double distance = h.distance(harold, p);
-            System.out.println("Earthquake was " + df.format(distance) + " km from home location");
+            
+            if (distance <= WORRY_THRESHOLD_DISTANCE) {
+            	System.out.println("At " + p.getCoordinates().getLatitude() + ", " + p.getCoordinates().getLongitude());
+            	System.out.println("Earthquake was " + df.format(distance) + " km from home location");
+            	System.out.println(feature.getProperty(("url")));
+            }
             
           }
           /* Properties: 
