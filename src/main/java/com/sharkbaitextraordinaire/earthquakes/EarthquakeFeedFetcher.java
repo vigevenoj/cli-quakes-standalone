@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.ws.rs.client.Invocation;
@@ -71,6 +72,12 @@ public class EarthquakeFeedFetcher
         FeatureCollection fc = mapper.readValue(feedString, FeatureCollection.class);
         for (Feature feature : fc.getFeatures()) {
           System.out.println(feature.getProperty("title"));
+          Map<String,Object> props = feature.getProperties();
+          for (String s: props.keySet()) {
+            if (null != props.get(s)) {
+              System.out.println(s + "->" + props.get(s).toString());
+            }
+          }
           GeoJsonObject g = feature.getGeometry();
           if (g instanceof Point) {
             Point p = (Point)g;
